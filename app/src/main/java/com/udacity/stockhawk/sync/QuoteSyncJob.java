@@ -8,7 +8,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
+import android.widget.Toast;
 
+import com.udacity.stockhawk.R;
 import com.udacity.stockhawk.data.Contract;
 import com.udacity.stockhawk.data.PrefUtils;
 
@@ -27,6 +32,9 @@ import yahoofinance.YahooFinance;
 import yahoofinance.histquotes.HistoricalQuote;
 import yahoofinance.histquotes.Interval;
 import yahoofinance.quotes.stock.StockQuote;
+
+import static com.udacity.stockhawk.R.id.price;
+import static com.udacity.stockhawk.R.id.symbol;
 
 public final class QuoteSyncJob {
 
@@ -74,7 +82,12 @@ public final class QuoteSyncJob {
 
                 Stock stock = quotes.get(symbol);
                 StockQuote quote = stock.getQuote();
-
+                if (quote.getPrice() == null) {
+                    String message = context.getString(R.string.error_no_symbol, symbol);
+                    // Does not work
+                    Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                    continue;
+                }
                 float price = quote.getPrice().floatValue();
                 float change = quote.getChange().floatValue();
                 float percentChange = quote.getChangeInPercent().floatValue();
