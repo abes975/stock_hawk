@@ -34,6 +34,7 @@ import java.util.Map;
 
 import static android.R.attr.data;
 import static android.R.attr.entries;
+import static android.R.attr.value;
 import static android.R.attr.x;
 import static android.R.id.message;
 
@@ -72,8 +73,8 @@ public class StockDetails extends AppCompatActivity {
             while (cur.moveToNext());
 
             for (Map.Entry<Long, Float> data : quotes.entrySet()) {
-                Date date=new Date(data.getKey());
-                DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+                //Date date=new Date(data.getKey());
+                //DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
                 entries.add(new Entry(data.getKey(), data.getValue()));
 
             }
@@ -81,29 +82,21 @@ public class StockDetails extends AppCompatActivity {
             LineDataSet dataSet = new LineDataSet(entries, "Prices"); // add entries to dataset
 
 
-   /*         // the labels that should be drawn on the XAxis
-            final String[] quarters = new String[] { "Q1", "Q2", "Q3", "Q4" };
-
             IAxisValueFormatter formatter = new IAxisValueFormatter() {
 
                 @Override
                 public String getFormattedValue(float value, AxisBase axis) {
-                    return quarters[(int) value];
+                    Date date = new Date((long)(value));
+                    DateFormat formatter = new SimpleDateFormat("yyyy/MM/dd");
+                    return formatter.format(date);
                 }
-
-                // we don't draw numbers, so no decimal digits needed
-                @Override
-                public int getDecimalDigits() {  return 0; }
             };
 
-            XAxis xAxis = mLineChart.getXAxis();
-            xAxis.setGranularity(1f); // minimum axis-step (interval) is 1
-            xAxis.setValueFormatter(formatter);
-
-*/
             LineData lineData = new LineData(dataSet);
             chart.setData(lineData);
             XAxis xAxis = chart.getXAxis();
+            xAxis.setGranularity(1f); // minimum axis-step (interval) is 1
+            xAxis.setValueFormatter(formatter);
             xAxis.setLabelRotationAngle(45);
             xAxis.setLabelCount(5, true);
             chart.invalidate(); // refresh
