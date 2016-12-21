@@ -10,6 +10,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -39,11 +40,12 @@ import static com.udacity.stockhawk.R.id.symbol;
 public final class QuoteSyncJob {
 
     private static final int ONE_OFF_ID = 2;
-    private static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
+    public static final String ACTION_DATA_UPDATED = "com.udacity.stockhawk.ACTION_DATA_UPDATED";
     private static final int PERIOD = 300000;
     private static final int INITIAL_BACKOFF = 10000;
     private static final int PERIODIC_ID = 1;
     private static final int YEARS_OF_HISTORY = 2;
+    public static final String NO_SYMBOL_FOUND = "no_symbol_found";
 
     private QuoteSyncJob() {
     }
@@ -83,9 +85,12 @@ public final class QuoteSyncJob {
                 Stock stock = quotes.get(symbol);
                 StockQuote quote = stock.getQuote();
                 if (quote.getPrice() == null) {
-                    String message = context.getString(R.string.error_no_symbol, symbol);
-                    // Does not work
-                    Toast.makeText(context.getApplicationContext(), message, Toast.LENGTH_LONG).show();
+                    String message = context.getString(R.string.toast_no_symbol, symbol);
+                    Intent intent = new Intent(NO_SYMBOL_FOUND);
+                    intent.putExtra(String.valueOf(R.string.error_no_symbol_key), message);
+                    LocalBroadcastManager.getInstance(context).sendBroadcast(intent);
+                    // Skip to next symbol but remove it otherwise will be always checked
+                    PrefUtils.removeStock(context, symbol);
                     continue;
                 }
                 float price = quote.getPrice().floatValue();

@@ -1,6 +1,9 @@
 package com.udacity.stockhawk.ui;
 
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -8,11 +11,13 @@ import android.os.Bundle;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
+import android.support.v4.content.LocalBroadcastManager;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -28,6 +33,9 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import timber.log.Timber;
 
+import static android.R.id.message;
+import static android.icu.text.Normalizer.NO;
+
 public class MainActivity extends AppCompatActivity implements LoaderManager.LoaderCallbacks<Cursor>,
         SwipeRefreshLayout.OnRefreshListener,
         StockAdapter.StockAdapterOnClickHandler {
@@ -40,10 +48,25 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
     @BindView(R.id.error)
     TextView error;
     private StockAdapter adapter;
+    private BroadcastReceiver mLocalMessageReceiver = new BroadcastReceiver() {
+
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            // intent can contain anydata
+            Log.d("sohail", "onReceive called");
+            String message = intent.getStringExtra(String.valueOf(R.string.error_no_symbol_key));
+            Toast.makeText(context, message, Toast.LENGTH_LONG).show();
+
+        }
+    };
 
     @Override
     public void onClick(String symbol) {
         Timber.d("Symbol clicked: %s", symbol);
+        Intent intent = new Intent(this, StockDetails.class);
+        intent.putExtra(String.valueOf(R.string.stock_detail_key), symbol);
+        startActivity(intent);
+
     }
 
     @Override
@@ -147,13 +170,11 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
         adapter.setCursor(data);
     }
 
-
     @Override
     public void onLoaderReset(Loader<Cursor> loader) {
         swipeRefreshLayout.setRefreshing(false);
         adapter.setCursor(null);
     }
-
 
     private void setDisplayModeMenuItemIcon(MenuItem item) {
         if (PrefUtils.getDisplayMode(this)
@@ -183,5 +204,19 @@ public class MainActivity extends AppCompatActivity implements LoaderManager.Loa
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        IntentFilter intentFilter = new IntentFilter(QuoteSyncJob.NO_SYMBOL_FOUND);
+        LocalBroadcastManager.getInstance(this).registerReceiver(mLocalMessageReceiver,
+                intentFilter);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        LocalBroadcastManager.getInstance(this).unregisterReceiver(mLocalMessageReceiver);
     }
 }
